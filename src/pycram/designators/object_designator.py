@@ -31,6 +31,14 @@ class BelieveObject(ObjectDesignatorDescription):
             self_.process_metadata_id = metadata.id
             return self_
 
+        def to_json(self) -> dict:
+            """
+            Converts the instance to a JSON-compatible dictionary.
+            """
+            return {
+                "type": self.type,
+                "name": self.name
+            }
 
 class ObjectPart(ObjectDesignatorDescription):
     """
@@ -58,6 +66,15 @@ class ObjectPart(ObjectDesignatorDescription):
 
             return obj
 
+        def to_json(self) -> dict:
+            """
+            Converts the instance to a JSON-compatible dictionary.
+            """
+            return {
+                "type": self.type,
+                "name": self.name,
+                "part_pose": self.part_pose.to_json()
+            }
     def __init__(self, names: List[str],
                  part_of: ObjectDesignatorDescription.Object,
                  type: Optional[str] = None,
@@ -116,6 +133,17 @@ class LocatedObject(ObjectDesignatorDescription):
         Timestamp at which the position was valid
         """
 
+        def to_json(self) -> dict:
+            """
+            Converts the instance to a JSON-compatible dictionary.
+            """
+            return {
+                "type": self.type,
+                "name": self.name,
+                "reference_frame": self.reference_frame,
+                "timestamp": self.timestamp
+            }
+
     def __init__(self, names: List[str], types: List[str],
                  reference_frames: List[str], timestamps: List[float], resolver: Optional[Callable] = None):
         """
@@ -131,6 +159,16 @@ class LocatedObject(ObjectDesignatorDescription):
         self.reference_frames: List[str] = reference_frames
         self.timestamps: List[float] = timestamps
 
+    def to_json(self) -> dict:
+        """
+        Converts the instance to a JSON-compatible dictionary.
+        """
+        return {
+            "names": self.names,
+            "types": self.types,
+            "reference_frames": self.reference_frames,
+            "timestamps": self.timestamps
+        }
 
 class RealObject(ObjectDesignatorDescription):
     """
@@ -145,6 +183,14 @@ class RealObject(ObjectDesignatorDescription):
         """
         Pose of the perceived object
         """
+
+        def to_json(self) -> dict:
+            """
+            Converts the instance to a JSON-compatible dictionary.
+            """
+            return {
+                "pose": self.pose.to_json()
+            }
 
     def __init__(self, names: Optional[List[str]] = None, types: Optional[List[str]] = None,
                  bullet_world_object: BulletWorldObject = None, resolver: Optional[Callable] = None):
@@ -175,3 +221,12 @@ class RealObject(ObjectDesignatorDescription):
                 # if bullet_obj.get_pose().dist(obj_deisg.pose) < 0.05:
                 #     obj_deisg.bullet_world_object = bullet_obj
                 #     yield obj_deisg
+
+    def to_json(self) -> dict:
+        """
+        Converts the instance to a JSON-compatible dictionary.
+        """
+        return {
+            "names": self.names,
+            "types": self.types
+        }

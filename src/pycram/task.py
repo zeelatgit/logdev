@@ -13,6 +13,7 @@ import anytree
 import pybullet
 import sqlalchemy.orm.session
 import tqdm
+import requests
 
 from .bullet_world import BulletWorld
 from .orm.task import (Code as ORMCode, TaskTreeNode as ORMTaskTreeNode)
@@ -163,7 +164,8 @@ class TaskTreeNode(anytree.NodeMixin):
                 "start_time": self.start_time.isoformat() if self.start_time else None,
                 "end_time": self.end_time.isoformat() if self.end_time else None,
                 "id": id(self),
-                "parent_id": id(self.parent) if self.parent else None
+                "parent_id": id(self.parent) if self.parent else None,
+                "reason_of_failure": str(self.reason) if self.reason else None
                 }
 
     def __str__(self):
@@ -287,6 +289,21 @@ def reset_tree() -> None:
 
 reset_tree()
 
+def send_json(json_info):
+    """Send JSON info to the API."""
+    API_URL = "http://localhost:5000/neemlog/api/log"
+    headers = {'Content-Type': 'application/json'}  # Headers specifying JSON content
+
+    # Send HTTP POST request with JSON data
+    response = requests.post(API_URL, json=json_info, headers=headers)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        print("JSON info sent successfully to the API.")
+    else:
+        print(f"Failed to send JSON info to the API. Status code: {response.status_code}")
+        print(response.text)  # Print the error message if available
+
 
 def with_tree(fun: Callable) -> Callable:
     """Decorator that records the function name, arguments and execution metadata in the task tree.
@@ -304,6 +321,12 @@ def with_tree(fun: Callable) -> Callable:
 
         task_tree = TaskTreeNode(code, parent=task_tree)
 
+        # Print information about the executable code
+        json_info = task_tree.to_json()
+        print(f"JSON Info: {json_info}")
+        #send_json(json_info)
+
+
         # Try to execute the task
         try:
             task_tree.status = TaskStatus.CREATED
@@ -313,6 +336,9 @@ def with_tree(fun: Callable) -> Callable:
             # if it succeeded set the flag
             task_tree.status = TaskStatus.SUCCEEDED
 
+            json_info = task_tree.to_json()
+            print(f"JSON Info: {json_info}")
+
         # iff a PlanFailure occurs
         except PlanFailure as e:
 
@@ -321,10 +347,16 @@ def with_tree(fun: Callable) -> Callable:
             task_tree.reason = e
             task_tree.status = TaskStatus.FAILED
             raise e
+
+            json_info["reason_of_failure"] = str(e)
+
         finally:
             # set and time and update current node pointer
             task_tree.end_time = datetime.datetime.now()
             task_tree = task_tree.parent
         return result
+
+    json_info = task_tree.to_json()
+    print(f"JSON Info: {json_info}")
 
     return handle_tree

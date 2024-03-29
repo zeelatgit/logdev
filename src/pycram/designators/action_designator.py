@@ -57,6 +57,12 @@ class MoveTorsoAction(ActionDesignatorDescription):
             session.commit()
             return action
 
+        def to_json(self) -> dict:
+            """Converts the instance to a JSON-compatible dictionary."""
+            return {
+                "action_type": "MoveTorsoAction",
+                "position": self.position,
+            }
     def __init__(self, positions: List[float], resolver=None):
         """
         Create a designator description to move the torso of the robot up and down.
@@ -104,6 +110,16 @@ class SetGripperAction(ActionDesignatorDescription):
         @with_tree
         def perform(self) -> None:
             MoveGripperMotion(gripper=self.gripper, motion=self.motion).resolve().perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "SetGripperAction",
+                "gripper": self.gripper,
+                "motion": self.motion
+            }
 
         def to_sql(self) -> ORMSetGripperAction:
             return ORMSetGripperAction(self.gripper, self.motion)
@@ -160,6 +176,16 @@ class ReleaseAction(ActionDesignatorDescription):
         def perform(self) -> Any:
             raise NotImplementedError()
 
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "ReleaseAction",
+                "gripper": self.gripper,
+                "object_designator": self.object_designator.to_json()
+            }
+
         def to_sql(self) -> Base:
             raise NotImplementedError()
 
@@ -196,6 +222,17 @@ class GripAction(ActionDesignatorDescription):
         @with_tree
         def perform(self) -> Any:
             raise NotImplementedError()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "GripAction",
+                "gripper": self.gripper,
+                "object_designator": self.object_designator.to_json(),
+                "effort": self.effort
+            }
 
         def to_sql(self) -> Base:
             raise NotImplementedError()
@@ -241,6 +278,15 @@ class ParkArmsAction(ActionDesignatorDescription):
                 kwargs["right_arm_config"] = "park"
             MoveArmJointsMotion(**kwargs).resolve().perform()
 
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "ParkArmsAction",
+                "arm": self.arm.name
+            }
+        
         def to_sql(self) -> ORMParkArmsAction:
             return ORMParkArmsAction(self.arm.name)
 
@@ -297,6 +343,19 @@ class PickUpAction(ActionDesignatorDescription):
         The object at the time this Action got created. It is used to be a static, information holding entity. It is
         not updated when the BulletWorld object is changed.
         """
+
+        #def __repr__(self):
+            # Convert object_at_execution to a string representation
+            #object_at_execution_repr = (
+                #f", object_at_execution={repr(self.object_at_execution)}"
+                #if hasattr(self, "object_at_execution") and self.object_at_execution is not None
+                #else ""
+            #)
+
+            #return (
+                #f"Action(object_designator={repr(self.object_designator)}, arm={repr(self.arm)}, grasp={repr(self.grasp)}"
+                #f"{object_at_execution_repr})"
+            #)
 
         @with_tree
         def perform(self) -> None:
@@ -378,6 +437,17 @@ class PickUpAction(ActionDesignatorDescription):
 
             return action
 
+        def to_json(self) -> dict:
+            """Converts the instance to a JSON-compatible dictionary."""
+            json_data = {
+                "action_type": "PickUpAction",
+                "arms": self.arm,
+                "grasps": self.grasp,
+            }
+            if self.object_designator:
+                json_data["object_designator_description"] = self.object_designator.to_json()
+            return json_data
+
     def __init__(self, object_designator_description:  Union[ObjectDesignatorDescription, ObjectDesignatorDescription.Object],
                  arms: List[str], grasps: List[str], resolver=None):
         """
@@ -450,6 +520,14 @@ class PlaceAction(ActionDesignatorDescription):
         def to_sql(self) -> ORMPlaceAction:
             return ORMPlaceAction(self.arm)
 
+        def to_json(self) -> dict:
+            """Converts the instance to a JSON-compatible dictionary."""
+            return {
+                "action_type": "PlaceAction",
+                "object_designator": self.object_designator.to_json(),
+                "arm": self.arm,
+                "target_location": self.target_location.to_json(),
+            }
         def insert(self, session, *args, **kwargs) -> ORMPlaceAction:
             action = super().insert(session)
 
@@ -493,6 +571,14 @@ class PlaceAction(ActionDesignatorDescription):
 
         return self.Action(obj_desig, self.arms[0], self.target_locations[0])
 
+    #def to_json(self) -> dict:
+    #    """Converts the instance to a JSON-compatible dictionary."""
+    #    return {
+    #        "action_type": "PlaceAction",
+    #        "object_designator_description": self.object_designator_description.to_json(),
+    #        "target_locations": [loc.to_json() for loc in self.target_locations],
+    #        "arms": self.arm,
+    #    }
 
 class NavigateAction(ActionDesignatorDescription):
     """
@@ -513,6 +599,12 @@ class NavigateAction(ActionDesignatorDescription):
         def to_sql(self) -> ORMNavigateAction:
             return ORMNavigateAction()
 
+        def to_json(self) -> dict:
+            """Converts the instance to a JSON-compatible dictionary."""
+            return {
+                "action_type": "NavigateAction",
+                "target_location": self.target_location.to_json(),
+            }
         def insert(self, session, *args, **kwargs) -> ORMNavigateAction:
             action = super().insert(session)
 
@@ -542,6 +634,12 @@ class NavigateAction(ActionDesignatorDescription):
         """
         return self.Action(self.target_locations[0])
 
+    #def to_json(self) -> dict:
+    #    """Converts the instance to a JSON-compatible dictionary."""
+    #    return {
+    #        "action_type": "NavigateAction",
+    #        "target_locations": [loc.to_json() for loc in self.target_locations],
+    #    }
 
 class TransportAction(ActionDesignatorDescription):
     """
@@ -591,6 +689,17 @@ class TransportAction(ActionDesignatorDescription):
             NavigateAction([place_loc.pose]).resolve().perform()
             PlaceAction.Action(self.object_designator, self.arm, self.target_location).perform()
             ParkArmsAction.Action(Arms.BOTH).perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "TransportAction",
+                "object_designator": self.object_designator.to_json(),
+                "arm": self.arm,
+                "target_location": self.target_location.to_json()
+            }
 
         def to_sql(self) -> ORMTransportAction:
             return ORMTransportAction(self.arm)
@@ -656,6 +765,15 @@ class LookAtAction(ActionDesignatorDescription):
         def perform(self) -> None:
             LookingMotion(target=self.target).resolve().perform()
 
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "LookAtAction",
+                "target": self.target.to_json()
+            }
+
         def to_sql(self) -> ORMLookAtAction:
             return ORMLookAtAction()
 
@@ -703,6 +821,15 @@ class DetectAction(ActionDesignatorDescription):
         @with_tree
         def perform(self) -> Any:
             return DetectingMotion(object_type=self.object_designator.type).resolve().perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "DetectAction",
+                "object_designator": self.object_designator.to_json()
+            }
 
         def to_sql(self) -> ORMDetectAction:
             return ORMDetectAction()
@@ -761,6 +888,16 @@ class OpenAction(ActionDesignatorDescription):
             OpeningMotion(self.object_designator, self.arm).resolve().perform()
 
             MoveGripperMotion("open", self.arm, allow_gripper_collision=True).resolve().perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "OpenAction",
+                "object_designator": self.object_designator.to_json(),
+                "arm": self.arm
+            }
 
         def to_sql(self) -> ORMOpenAction:
             return ORMOpenAction(self.arm)
@@ -822,6 +959,16 @@ class CloseAction(ActionDesignatorDescription):
             ClosingMotion(self.object_designator, self.arm).resolve().perform()
 
             MoveGripperMotion("open", self.arm, allow_gripper_collision=True).resolve().perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "CloseAction",
+                "object_designator": self.object_designator.to_json(),
+                "arm": self.arm
+            }
 
         def to_sql(self) -> ORMCloseAction:
             return ORMCloseAction(self.arm)
@@ -895,6 +1042,16 @@ class GraspingAction(ActionDesignatorDescription):
 
             MoveTCPMotion(object_pose, self.arm, allow_gripper_collision=True).resolve().perform()
             MoveGripperMotion("close", self.arm, allow_gripper_collision=True).resolve().perform()
+
+        def to_json(self) -> dict:
+            """
+            Convert the action to a JSON-compatible dictionary.
+            """
+            return {
+                "action_type": "GraspingAction",
+                "arm": self.arm,
+                "object_desig": self.object_desig.to_json()
+            }
 
         def to_sql(self) -> ORMGraspingAction:
             return ORMGraspingAction(self.arm)

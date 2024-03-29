@@ -85,7 +85,6 @@ class TaskTreeTestCase(test_bullet_world.BulletWorldTest):
 
         self.assertEqual(len(pycram.task.task_tree), 1)
 
-
 if __name__ == '__main__':
     unittest.main()
 

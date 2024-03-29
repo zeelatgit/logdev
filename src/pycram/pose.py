@@ -259,6 +259,12 @@ class Pose(PoseStamped):
 
         return pose
 
+    def to_json(self):
+        return {
+            "position": self.position_as_list(),
+            "orientation": self.orientation_as_list(),
+            "frame": self.frame
+        }
 
 class Transform(TransformStamped):
     """
@@ -510,4 +516,11 @@ class Transform(TransformStamped):
         """
         self.rotation = new_rotation
 
+    #def to_json(self):
+    #    return {
+    #        "translation": self.translation_as_list(),
+    #        "rotation": self.rotation_as_list(),
+    #        "frame": self.frame,
+    #        "child_frame": self.child_frame_id
+    #    }
 

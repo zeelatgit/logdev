@@ -38,6 +38,15 @@ class MoveMotion(MotionDesignatorDescription):
             return pm_manager.navigate().execute(self)
             # return ProcessModule.perform(self)
 
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "MoveMotion",
+                "target": self.target.to_json(),
+            }
+
         def to_sql(self) -> ORMMoveMotion:
             return ORMMoveMotion()
 
@@ -99,6 +108,17 @@ class PickUpMotion(MotionDesignatorDescription):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.pick_up().execute(self)
 
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "PickUpMotion",
+                "object_designator": self.object_desig.to_json(),
+                "arm": self.arm,
+                "grasp": self.grasp
+            }
+
     def __init__(self, object_desig: ObjectDesignatorDescription.Object, grasp: str = None, arm: str = None,
                  resolver: Callable = None):
         """
@@ -153,6 +173,16 @@ class PlaceMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.place().execute(self)
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "PlaceMotion",
+                "object_designator": self.object.to_json(),
+                "target_pose": self.target.to_json(),
+                "arm": self.arm
+            }
 
     def __init__(self, object_desig: ObjectDesignatorDescription.Object, target: Pose,
                  arm: Optional[str] = None, resolver: Optional[Callable] = None):
@@ -207,6 +237,17 @@ class MoveTCPMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.move_tcp().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "MoveTCPMotion",
+                "target": self.target.to_json(),
+                "arm": self.arm,
+                "allow_gripper_collision": self.allow_gripper_collision
+            }
 
         def to_sql(self) -> ORMMoveTCPMotion:
             return ORMMoveTCPMotion(self.arm, self.allow_gripper_collision)
@@ -277,6 +318,15 @@ class LookingMotion(MotionDesignatorDescription):
 
             return motion
 
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "LookingMotion",
+                "target_pose": self.target.to_json(),
+            }
+
     def __init__(self, target: Optional[Pose] = None, object: Optional[ObjectDesignatorDescription.Object] = None,
                  resolver: Optional[Callable] = None):
         """
@@ -329,6 +379,17 @@ class MoveGripperMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.move_gripper().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "MoveGripperMotion",
+                "motion": self.motion,
+                "gripper": self.gripper,
+                "allow_gripper_collision": self.allow_gripper_collision
+            }
 
         def to_sql(self) -> ORMMoveGripperMotion:
             return ORMMoveGripperMotion(self.motion, self.gripper, self.allow_gripper_collision)
@@ -400,6 +461,15 @@ class DetectingMotion(MotionDesignatorDescription):
             session.commit()
             return motion
 
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "DetectingMotion",
+                "object_type": self.object_type,
+            }
+
     def __init__(self, object_type: str, resolver: Optional[Callable] = None):
         """
         Checks for every object in the FOV of the robot if it fits the given object type. If the types match an object
@@ -441,6 +511,16 @@ class MoveArmJointsMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.move_arm_joints().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "MoveArmJointsMotion",
+                "left_arm_poses": self.left_arm_poses,
+                "right_arm_poses": self.right_arm_poses,
+            }
 
     def __init__(self, left_arm_config: Optional[str] = None, right_arm_config: Optional[str] = None,
                  left_arm_poses: Optional[dict] = None, right_arm_poses: Optional[dict] = None,
@@ -501,6 +581,15 @@ class WorldStateDetectingMotion(MotionDesignatorDescription):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.world_state_detecting().execute(self)
 
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "WorldStateDetectingMotion",
+                "object_type": self.object_type,
+            }
+
     def __init__(self, object_type: str, resolver: Optional[Callable] = None):
         """
         Tries to find an object using the belief state (BulletWorld), if there is an object in the belief state matching
@@ -542,6 +631,16 @@ class MoveJointsMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.move_joints().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "MoveJointsMotion",
+                "names": self.names,
+                "positions": self.positions
+            }
 
     def __init__(self, names: List[str], positions: List[float], resolver: Optional[Callable] = None):
         """
@@ -595,6 +694,16 @@ class OpeningMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.open().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "OpeningMotion",
+                "object_part": self.object_part.to_json(),
+                "arm": self.arm
+            }
 
         def to_sql(self) -> ORMOpeningMotion:
             return ORMOpeningMotion(self.arm)
@@ -654,6 +763,16 @@ class ClosingMotion(MotionDesignatorDescription):
         def perform(self):
             pm_manager = ProcessModuleManager.get_manager()
             return pm_manager.close().execute(self)
+
+        def to_json(self) -> dict:
+            """
+            Convert the motion to a JSON-compatible dictionary.
+            """
+            return {
+                "motion_type": "ClosingMotion",
+                "object_part": self.object_part.to_json(),
+                "arm": self.arm
+            }
 
         def to_sql(self) -> ORMClosingMotion:
             return ORMClosingMotion(self.arm)

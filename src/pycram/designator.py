@@ -612,6 +612,15 @@ class ObjectDesignatorDescription(DesignatorDescription):
         which will not update when the original bullet_world_object is moved.
         """
 
+        def to_json(self) -> dict:
+            """
+            Convert the object to a JSON-compatible dictionary.
+            """
+            return {
+                "name": self.name,
+                "type": self.type,
+                "pose": self.pose.to_json() if hasattr(self, 'pose') else None
+            }
         def __post_init__(self):
             if self.bullet_world_object:
                 self._pose = self.bullet_world_object.get_pose
@@ -764,3 +773,12 @@ class ObjectDesignatorDescription(DesignatorDescription):
                 continue
 
             yield self.Object(obj.name, obj.type, obj)
+
+    #def to_json(self) -> dict:
+        """
+        Convert the object designator description to a JSON-compatible dictionary.
+        """
+        #return {
+        #    "names": self.names,
+        #    "types": self.types,
+        #}

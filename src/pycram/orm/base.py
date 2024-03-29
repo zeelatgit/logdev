@@ -192,6 +192,8 @@ class Position(Base):
     y: Mapped[float]
     z: Mapped[float]
 
+    #def to_json(self):
+    #    return {"x": self.x, "y": self.y, "z": self.z}
 
 class Quaternion(Base):
     """ORM Class for Quaternions."""
@@ -201,6 +203,8 @@ class Quaternion(Base):
     z: Mapped[float]
     w: Mapped[float]
 
+    #def to_json(self):
+    #    return {"x": self.x, "y": self.y, "z": self.z, "w": self.w}
 
 class Pose(PositionMixin, QuaternionMixin, Base):
     """ORM Class for Poses."""
@@ -208,6 +212,9 @@ class Pose(PositionMixin, QuaternionMixin, Base):
     time: Mapped[datetime.datetime]
     frame: Mapped[str]
 
+    #def to_json(self):
+    #    return {"position": self.position.to_json(), "orientation": self.orientation.to_json(),
+    #            "time": self.time.isoformat() if self.time else None, "frame": self.frame}
 
 class Color(Base):
     """ORM Class for Colors."""
@@ -217,6 +224,8 @@ class Color(Base):
     b: Mapped[float]
     alpha: Mapped[float]
 
+    #def to_json(self):
+    #    return {"r": self.r, "g": self.g, "b": self.b, "alpha": self.alpha}
 
 class RobotState(PoseMixin, Base):
     """ORM Representation of a robots state."""
@@ -228,3 +237,6 @@ class RobotState(PoseMixin, Base):
 
     type: Mapped[ObjectType]
     """The type of the robot."""
+
+    #def to_json(self):
+    #    return {"pose": self.pose.to_json(), "torso_height": self.torso_height, "type": self.type.name}
